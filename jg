@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>HyperDrive Ultimate</title>
+
+<style>
+*{
+box-sizing:border-box;
+margin:0;
+padding:0;
+user-select:none;
+-webkit-user-select:none;
+touch-action:none;
+}
+
+html,body{
+width:100%;
+height:100%;
+overflow:hidden;
+background:#050505;
+font-family:Arial,sans-serif;
+}
+
+canvas{
+display:block;
+width:100%;
+height:100%;
+}
+
+button{
+font:inherit;
+}
+
+#menu,#gameOver{
+position:fixed;
+inset:0;
+z-index:20;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+text-align:center;
+color:white;
+background:radial-gradient(circle,#263238,#050505 75%);
+}
+
+#menu h1{
+font-size:48px;
+letter-spacing:5px;
+text-shadow:0 0 20px #00e5ff;
+}
+
+#menu h2{
+color:#00e5ff;
+}
+
+#cars{
+display:flex;
+gap:10px;
+justify-content:center;
+flex-wrap:wrap;
+margin:20px 10px;
+}
+
+.car{
+width:120px;
+padding:12px;
+background:#111;
+border:2px solid #555;
+border-radius:14px;
+}
+
+.car.selected{
+border-color:#00e5ff;
+box-shadow:0 0 18px #00e5ff;
+}
+
+.preview{
+width:65px;
+height:35px;
+margin:8px auto;
+border-radius:10px;
+}
+
+.red{background:#e53935}
+.blue{background:#2979ff}
+.gold{background:#ffd600}
+
+#play,#again{
+padding:15px 30px;
+border:0;
+border-radius:14px;
+background:#087cff;
+color:white;
+font-size:18px;
+font-weight:bold;
+}
+
+#hud{
+display:none;
+position:fixed;
+top:10px;
+left:8px;
+right:8px;
+z-index:5;
+color:white;
+}
+
+.row{
+display:flex;
+justify-content:space-between;
+gap:5px;
+}
+
+.box{
+background:#000b;
+padding:7px;
+border-radius:8px;
+font-size:13px;
+}
+
+#sound{
+display:none;
+position:fixed;
+right:10px;
+top:55px;
+z-index:8;
+background:#000b;
+color:white;
+border:1px solid #fff5;
+border-radius:8px;
+padding:7px;
+}
+
+#nitroBox{
+display:none;
+position:fixed;
+z-index:6;
+bottom:15px;
+left:50%;
+transform:translateX(-50%);
+width:180px;
+height:16px;
+border:2px solid white;
+border-radius:15px;
+overflow:hidden;
+background:#111;
+}
+
+#nitro{
+width:100%;
+height:100%;
+background:#00d9ff;
+}
+
+#controls{
+display:none;
+position:fixed;
+inset:0;
+z-index:7;
+pointer-events:none;
+}
+
+.btn{
+position:absolute;
+width:70px;
+height:70px;
+border-radius:50%;
+background:#ffffff33;
+border:2px solid #fff8;
+color:white;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:27px;
+pointer-events:auto;
+}
+
+#left{left:15px;bottom:20px}
+#right{left:95px;bottom:20px}
+#brake{right:95px;bottom:20px}
+#up{right:15px;bottom:20px}
+
+#turbo{
+right:18px;
+bottom:105px;
+width:85px;
+height:50px;
+border-radius:12px;
+font-size:13px;
+}
+
+#gameOver{
+display:none;
+background:#000d;
+}
+
+#gameOver h1{
+color:#ff1744;
+font-size:45px;
+margin-bottom:15px;
+}
+
+.small{
+color:#aaa;
+font-size:13px;
+margin-top:15px;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="game"></canvas>
+
+<div id="menu">
+
+<h1>HYPERDRIVE</h1>
+<h2>ULTIMATE</h2>
+
+<p>Elige tu hipercoche</p>
+
+<div id="cars">
+
+<div class="car selected" data-car="red">
+<b>FALCON R</b>
+<div class="preview red"></div>
+★★★★
+</div>
+
+<div class="car" data-car="blue">
+<b>VORTEX X</b>
+<div class="preview blue"></div>
+★★★★★
+</div>
+
+<div class="car" data-car="gold">
+<b>TITAN GT</b>
+<div class="preview gold"></div>
+★★★★
+</div>
+
+</div>
+
+<button id="play">🚀 JUGAR</button>
+
+<div class="small">
+Móvil: botones<br>
+PC: WASD / Flechas<br>
+ESPACIO = TURBO
+</div>
+
+</div>
+
+
+<div id="hud">
+
+<div class="row">
+
+<div class="box">
+🏁 <span id="score">0</span>
+</div>
+
+<div class="box">
+❤️ <span id="life">100</span>
+</div>
+
+<div class="box">
+🪙 <span id="coins">0</span>
+</div>
+
+<div class="box">
+🏎️ <span id="speed">0</span> KM/H
+</div>
+
+</div>
+
+</div>
+
+
+<button id="sound">🔊</button>
+
+
+<div id="nitroBox">
+<div id="nitro"></div>
+</div>
+
+
+<div id="controls">
+
+<div class="btn" id="left">◀</div>
+<div class="btn" id="right">▶</div>
+<div class="btn" id="brake">▼</div>
+<div class="btn" id="up">▲</div>
+<div class="btn" id="turbo">TURBO</div>
+
+</div>
+
+
+<div id="gameOver">
+
+<h1>GAME OVER</h1>
+
+<p>
+Distancia:
+<span id="finalScore">0</span>
+</p>
+
+<p>
+Monedas:
+<span id="finalCoins">0</span>
+</p>
+
+<button id="again" style="margin-top:20px">
+🔄 JUGAR OTRA VEZ
+</button>
+
+</div>
+
+
+<script>
+
+/* =========================
+   ELEMENTOS
+========================= */
+
+var canvas=document.getElementById("game");
+var ctx=canvas.getContext("2d");
+
+var menu=document.getElementById("menu");
+var hud=document.getElementById("hud");
+var controls=document.getElementById("controls");
+var gameOver=document.getElementById("gameOver");
+
+var play=document.getElementById("play");
+var again=document.getElementById("again");
+
+var sound=document.getElementById("sound");
+
+var scoreText=document.getElementById("score");
+var lifeText=document.getElementById("life");
+var coinsText=document.getElementById("coins");
+var speedText=document.getElementById("speed");
+
+var finalScore=document.getElementById("finalScore");
+var finalCoins=document.getElementById("finalCoins");
+
+var nitroBar=document.getElementById("nitro");
+
+var W=window.innerWidth;
+var H=window.innerHeight;
+
+canvas.width=W;
+canvas.height=H;
+
+
+/* =========================
+   VARIABLES
+========================= */
+
+var playing=false;
+
+var carType="red";
+
+var score=0;
+var coins=0;
+var life=100;
+
+var speed=80;
+var nitro=100;
+
+var roadMove=0;
+
+var lastTime=0;
+
+var traffic=[];
+var coinList=[];
+
+var spawnTimer=0;
+var coinTimer=0;
+
+var keys={};
+
+var player={
+x:W/2,
+y:H-150,
+w:52,
+h:100
+};
+
+
+/* =========================
+   AUDIO
+========================= */
+
+var audio=null;
+var engine=null;
+var engineGain=null;
+
+var soundOn=true;
+
+
+function startAudio(){
+
+if(!soundOn)return;
+
+try{
+
+if(!audio){
+
+var AC=
+window.AudioContext||
+window.webkitAudioContext;
+
+if(!AC)return;
+
+audio=new AC();
+
+engine=
+audio.createOscillator();
+
+engineGain=
+audio.createGain();
+
+engine.type="sawtooth";
+
+engine.frequency.value=80;
+
+engineGain.gain.value=0;
+
+engine.connect(engineGain);
+
+engineGain.connect(audio.destination);
+
+engine.start();
+
+}
+
+if(audio.state==="suspended"){
+audio.resume();
+}
+
+}catch(e){}
+
+}
+
+
+function beep(freq){
+
+if(!soundOn)return;
+
+try{
+
+startAudio();
+
+if(!audio)return;
+
+var osc=
+audio.createOscillator();
+
+var gain=
+audio.createGain();
+
+osc.frequency.value=freq;
+
+gain.gain.value=.12;
+
+osc.connect(gain);
+
+gain.connect(audio.destination);
+
+osc.start();
+
+gain.gain.exponentialRampToValueAtTime(
+.001,
+audio.currentTime+.15
+);
+
+osc.stop(
+audio.currentTime+.16
+);
+
+}catch(e){}
+
+}
+
+
+/* =========================
+   RESIZE
+========================= */
+
+window.addEventListener(
+"resize",
+function(){
+
+W=window.innerWidth;
+H=window.innerHeight;
+
+canvas.width=W;
+canvas.height=H;
+
+player.y=H-150;
+
+}
+);
+
+
+/* =========================
+   TECLADO
+========================= */
+
+window.addEventListener(
+"keydown",
+function(e){
+
+keys[e.key.toLowerCase()]=true;
+
+if(e.code==="Space"){
+keys.space=true;
+e.preventDefault();
+}
+
+startAudio();
+
+}
+);
+
+
+window.addEventListener(
+"keyup",
+function(e){
+
+keys[e.key.toLowerCase()]=false;
+
+if(e.code==="Space"){
+keys.space=false;
+}
+
+}
+);
+
+
+/* =========================
+   BOTONES MÓVIL
+========================= */
+
+function button(id,key){
+
+var b=document.getElementById(id);
+
+b.addEventListener(
+"pointerdown",
+function(e){
+
+e.preventDefault();
+
+startAudio();
+
+keys[key]=true;
+
+}
+);
+
+b.addEventListener(
+"pointerup",
+function(e){
+
+e.preventDefault();
+
+keys[key]=false;
+
+}
+);
+
+b.addEventListener(
+"pointercancel",
+function(){
+
+keys[key]=false;
+
+}
+);
+
+}
+
+
+button("left","arrowleft");
+button("right","arrowright");
+button("brake","arrowdown");
+button("up","arrowup");
+button("turbo","space");
+
+
+/* =========================
+   COCHES
+========================= */
+
+document
+.querySelectorAll(".car")
+.forEach(function(car){
+
+car.addEventListener(
+"click",
+function(){
+
+startAudio();
+
+beep(500);
+
+document
+.querySelectorAll(".car")
+.forEach(function(c){
+c.classList.remove("selected");
+});
+
+car.classList.add("selected");
+
+carType=
+car.getAttribute("data-car");
+
+}
+);
+
+});
+
+
+/* =========================
+   CARRETERA
+========================= */
+
+function roadWidth(){
+
+return Math.min(
+W*.76,
+700
+);
+
+}
+
+
+function roadLeft(){
+
+return(
+W-roadWidth()
+)/2;
+
+}
+
+
+function laneWidth(){
+
+return roadWidth()/4;
+
+}
+
+
+/* =========================
+   REINICIAR
+========================= */
+
+function reset(){
+
+score=0;
+coins=0;
+life=100;
+
+speed=80;
+nitro=100;
+
+roadMove=0;
+
+traffic=[];
+coinList=[];
+
+spawnTimer=0;
+coinTimer=0;
+
+player.x=W/2;
+player.y=H-150;
+
+}
+
+
+/* =========================
+   JUGAR
+========================= */
+
+function startGame(){
+
+reset();
+
+startAudio();
+
+beep(600);
+
+playing=true;
+
+menu.style.display="none";
+
+gameOver.style.display="none";
+
+hud.style.display="block";
+
+controls.style.display="block";
+
+sound.style.display="block";
+
+document.getElementById(
+"nitroBox"
+).style.display="block";
+
+lastTime=
+performance.now();
+
+requestAnimationFrame(loop);
+
+}
+
+
+/* IMPORTANTE:
+   LOS BOTONES SE CONECTAN
+   DESPUÉS DE CREARLOS */
+
+play.addEventListener(
+"click",
+startGame
+);
+
+again.addEventListener(
+"click",
+startGame
+);
+
+
+/* =========================
+   TRÁFICO
+========================= */
+
+function createTraffic(){
+
+var lane=
+Math.floor(
+Math.random()*4
+);
+
+var colors=[
+"#e53935",
+"#2979ff",
+"#ff9800",
+"#9c27b0",
+"#eeeeee"
+];
+
+traffic.push({
+
+x:
+roadLeft()+
+laneWidth()*lane+
+laneWidth()/2,
+
+y:-120,
+
+w:48,
+
+h:90,
+
+speed:
+70+
+Math.random()*110,
+
+color:
+colors[
+Math.floor(
+Math.random()*colors.length
+)
+]
+
+});
+
+}
+
+
+/* =========================
+   MONEDAS
+========================= */
+
+function createCoin(){
+
+var lane=
+Math.floor(
+Math.random()*4
+);
+
+coinList.push({
+
+x:
+roadLeft()+
+laneWidth()*lane+
+laneWidth()/2,
+
+y:-20,
+
+r:10
+
+});
+
+}
+
+
+/* =========================
+   COLISIÓN
+========================= */
+
+function collision(a,b){
+
+return(
+
+a.x-a.w/2<
+b.x+b.w/2 &&
+
+a.x+a.w/2>
+b.x-b.w/2 &&
+
+a.y<
+b.y+b.h &&
+
+a.y+a.h>
+b.y
+
+);
+
+}
+
+
+/* =========================
+   DIBUJAR CARRETERA
+========================= */
+
+function drawRoad(){
+
+var rw=roadWidth();
+
+var rl=roadLeft();
+
+ctx.fillStyle="#174017";
+
+ctx.fillRect(
+0,0,W,H
+);
+
+ctx.fillStyle="#292929";
+
+ctx.fillRect(
+rl,0,rw,H
+);
+
+ctx.fillStyle="#fff";
+
+ctx.fillRect(
+rl,0,5,H
+);
+
+ctx.fillRect(
+rl+rw-5,
+0,
+5,
+H
+);
+
+ctx.strokeStyle="#eee";
+
+ctx.lineWidth=4;
+
+ctx.setLineDash([
+35,
+35
+]);
+
+for(
+var i=1;
+i<4;
+i++
+){
+
+var x=
+rl+
+laneWidth()*i;
+
+ctx.beginPath();
+
+ctx.moveTo(
+x,
+-100+roadMove
+);
+
+ctx.lineTo(
+x,
+H+100+roadMove
+);
+
+ctx.stroke();
+
+}
+
+ctx.setLineDash([]);
+
+}
+
+
+/* =========================
+   DIBUJAR COCHE
+========================= */
+
+function drawCar(
+x,y,w,h,color
+){
+
+ctx.save();
+
+ctx.translate(
+x,y
+);
+
+ctx.fillStyle="#0008";
+
+ctx.fillRect(
+-w/2+5,
+5,
+w,
+h
+);
+
+ctx.fillStyle=color;
+
+ctx.beginPath();
+
+ctx.roundRect(
+-w/2,
+0,
+w,
+h,
+12
+);
+
+ctx.fill();
+
+ctx.fillStyle="#101820";
+
+ctx.beginPath();
+
+ctx.roundRect(
+-w*.32,
+h*.15,
+w*.64,
+h*.25,
+8
+);
+
+ctx.fill();
+
+ctx.fillStyle="#ff2222";
+
+ctx.fillRect(
+-w*.32,
+h*.78,
+w*.22,
+7
+);
+
+ctx.fillRect(
+w*.10,
+h*.78,
+w*.22,
+7
+);
+
+ctx.fillStyle="#050505";
+
+ctx.fillRect(
+-w/2-4,
+h*.18,
+7,
+22
+);
+
+ctx.fillRect(
+w/2-3,
+h*.18,
+7,
+22
+);
+
+ctx.fillRect(
+-w/2-4,
+h*.65,
+7,
+22
+);
+
+ctx.fillRect(
+w/2-3,
+h*.65,
+7,
+22
+);
+
+ctx.restore();
+
+}
+
+
+/* =========================
+   JUGADOR
+========================= */
+
+function drawPlayer(){
+
+var color="#e53935";
+
+if(carType==="blue")
+color="#2979ff";
+
+if(carType==="gold")
+color="#ffd600";
+
+drawCar(
+player.x,
+player.y,
+player.w,
+player.h,
+color
+);
+
+
+/* TURBO */
+
+if(
+keys.space &&
+nitro>0
+){
+
+ctx.fillStyle="#00e5ff";
+
+ctx.beginPath();
+
+ctx.moveTo(
+player.x-14,
+player.y+100
+);
+
+ctx.lineTo(
+player.x-5,
+player.y+130+
+Math.random()*10
+);
+
+ctx.lineTo(
+player.x,
+player.y+100
+);
+
+ctx.fill();
+
+ctx.beginPath();
+
+ctx.moveTo(
+player.x+5,
+player.y+100
+);
+
+ctx.lineTo(
+player.x+14,
+player.y+130+
+Math.random()*10
+);
+
+ctx.lineTo(
+player.x+20,
+player.y+100
+);
+
+ctx.fill();
+
+}
+
+}
+
+
+/* =========================
+   ACTUALIZAR JUGADOR
+========================= */
+
+function updatePlayer(dt){
+
+if(
+keys.arrowup||
+keys.w
+){
+
+speed+=
+140*dt;
+
+}else{
+
+speed-=
+50*dt;
+
+}
+
+
+if(
+keys.arrowdown||
+keys.s
+){
+
+speed-=
+180*dt;
+
+}
+
+
+/* TURBO */
+
+if(
+keys.space &&
+nitro>0
+){
+
+speed+=
+260*dt;
+
+nitro-=
+40*dt;
+
+}else{
+
+nitro+=
+12*dt;
+
+}
+
+
+nitro=
+Math.max(
+0,
+Math.min(
+100,
+nitro
+)
+);
+
+
+var maxSpeed=270;
+
+if(carType==="blue")
+maxSpeed=300;
+
+if(carType==="gold")
+maxSpeed=250;
+
+
+speed=
+Math.max(
+0,
+Math.min(
+maxSpeed,
+speed
+)
+);
+
+
+/* DIRECCIÓN */
+
+var steer=
+260*dt;
+
+if(
+keys.arrowleft||
+keys.a
+){
+
+player.x-=
+steer;
+
+}
+
+if(
+keys.arrowright||
+keys.d
+){
+
+player.x+=
+steer;
+
+}
+
+
+/* LIMITAR A CARRETERA */
+
+var rl=
+roadLeft();
+
+var rw=
+roadWidth();
+
+player.x=
+Math.max(
+rl+player.w/2,
+Math.min(
+rl+rw-player.w/2,
+player.x
+)
+);
+
+
+/* MOTOR */
+
+if(
+audio &&
+engineGain &&
+soundOn
+){
+
+engine.frequency.value=
+70+
+speed*.9;
+
+engineGain.gain.value=
+playing ?
+.025+
+speed/300*.06:
+0;
+
+}
+
+}
+
+
+/* =========================
+   ACTUALIZAR TRÁFICO
+========================= */
+
+function updateTraffic(dt){
+
+for(
+var i=traffic.length-1;
+i>=0;
+i--
+){
+
+var c=
+traffic[i];
+
+c.y+=
+(speed-c.speed)*dt+
+100*dt;
+
+
+/* CHOQUE */
+
+if(
+collision(
+player,
+c
+)
+){
+
+life-=35;
+
+speed*=.5;
+
+beep(100);
+
+traffic.splice(
+i,
+1
+);
+
+continue;
+
+}
+
+
+/* FUERA */
+
+if(
+c.y>H+150
+){
+
+traffic.splice(
+i,
+1
+);
+
+score+=50;
+
+}
+
+}
+
+}
+
+
+/* =========================
+   MONEDAS
+========================= */
+
+function updateCoins(dt){
+
+for(
+var i=coinList.length-1;
+i>=0;
+i--
+){
+
+var c=
+coinList[i];
+
+c.y+=
+speed*dt;
+
+var dx=
+c.x-player.x;
+
+var dy=
+c.y-
+(player.y+50);
+
+if(
+Math.sqrt(
+dx*dx+
+dy*dy
+)<35
+){
+
+coins++;
+
+score+=100;
+
+beep(900);
+
+coinList.splice(
+i,
+1
+);
+
+continue;
+
+}
+
+if(
+c.y>H+40
+){
+
+coinList.splice(
+i,
+1
+);
+
+}
+
+}
+
+}
+
+
+/* =========================
+   DIBUJAR MONEDAS
+========================= */
+
+function drawCoins(){
+
+coinList.forEach(
+function(c){
+
+ctx.fillStyle="#ffd600";
+
+ctx.beginPath();
+
+ctx.arc(
+c.x,
+c.y,
+c.r,
+0,
+Math.PI*2
+);
+
+ctx.fill();
+
+ctx.strokeStyle="#fff176";
+
+ctx.lineWidth=3;
+
+ctx.stroke();
+
+}
+);
+
+}
+
+
+/* =========================
+   HUD
+========================= */
+
+function updateHUD(){
+
+scoreText.textContent=
+Math.floor(score);
+
+lifeText.textContent=
+Math.max(
+0,
+Math.floor(life)
+);
+
+coinsText.textContent=
+coins;
+
+speedText.textContent=
+Math.floor(speed);
+
+nitroBar.style.width=
+nitro+"%";
+
+}
+
+
+/* =========================
+   GAME OVER
+========================= */
+
+function endGame(){
+
+playing=false;
+
+if(
+audio &&
+engineGain
+){
+
+engineGain.gain.value=0;
+
+}
+
+controls.style.display=
+"none";
+
+document.getElementById(
+"nitroBox"
+).style.display="none";
+
+gameOver.style.display=
+"flex";
+
+finalScore.textContent=
+Math.floor(score);
+
+finalCoins.textContent=
+coins;
+
+}
+
+
+/* =========================
+   GAME LOOP
+========================= */
+
+function loop(time){
+
+if(!playing)
+return;
+
+var dt=
+Math.min(
+(time-lastTime)/1000,
+.05
+);
+
+lastTime=time;
+
+
+/* JUGADOR */
+
+updatePlayer(dt);
+
+
+/* CARRETERA */
+
+roadMove+=
+speed*dt;
+
+if(
+roadMove>70
+){
+
+roadMove-=70;
+
+}
+
+
+/* SPAWN */
+
+spawnTimer+=dt;
+
+coinTimer+=dt;
+
+
+if(
+spawnTimer>
+.65
+){
+
+createTraffic();
+
+spawnTimer=0;
+
+}
+
+
+if(
+coinTimer>
+.9
+){
+
+createCoin();
+
+coinTimer=0;
+
+}
+
+
+/* ACTUALIZAR */
+
+updateTraffic(dt);
+
+updateCoins(dt);
+
+score+=
+speed*dt*.08;
+
+
+/* DIBUJAR */
+
+drawRoad();
+
+drawCoins();
+
+traffic.forEach(
+function(c){
+
+drawCar(
+c.x,
+c.y,
+c.w,
+c.h,
+c.color
+);
+
+}
+);
+
+drawPlayer();
+
+updateHUD();
+
+
+/* FIN */
+
+if(
+life<=0
+){
+
+endGame();
+
+return;
+
+}
+
+
+requestAnimationFrame(
+loop
+);
+
+}
+
+
+/* =========================
+   SONIDO
+========================= */
+
+sound.addEventListener(
+"click",
+function(){
+
+soundOn=!soundOn;
+
+sound.textContent=
+soundOn ?
+"🔊":
+"🔇";
+
+if(
+soundOn
+){
+
+startAudio();
+
+}else if(
+audio &&
+engineGain
+){
+
+engineGain.gain.value=0;
+
+}
+
+}
+);
+
+</script>
+
+</body>
+</html>
